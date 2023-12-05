@@ -35,7 +35,6 @@ BEGIN
 		set tran_result := 'ok';
 	       COMMIT;
 	    END IF;
-;
 END//
 
 DELIMITER ;
