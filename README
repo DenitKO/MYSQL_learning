@@ -50,9 +50,11 @@ DELIMITER //
 
 CREATE TRIGGER check_lengthname_communities_before_insert 
 
-BEFORE INSERT ON communities 
-FOR EACH ROW BEGIN IF LENGTH(NEW.name) < 5 THEN 
-	SET MESSAGE_TEXT = ('Name must be at least 5 characters.'); 
+BEFORE INSERT ON communities FOR EACH ROW 
+BEGIN 
+IF LENGTH(NEW.name) < 5 THEN 
+	SIGNAL SQLSTATE '20001' 
+	SET MESSAGE_TEXT = 'Name must be at least 5 characters.'; 
     END IF; 
 END//
 
