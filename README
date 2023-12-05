@@ -10,26 +10,35 @@ DROP PROCEDURE IF EXISTS `vk`.`delete_user`;
 
 DELIMITER //
 
-CREATE PROCEDURE delete_user(IN delete_by_user_id BIGINT UNSIGNED)
+CREATE PROCEDURE delete_user(IN delete_by_user_id BIGINT UNSIGNED, OUT tran_result varchar(200))
 BEGIN
-	DELETE FROM likes WHERE user_id = delete_by_user_id
-    JOIN media AS m ON m.id = likes.media_id
-;
+	DECLARE `_rollback` BOOL DEFAULT 0;
+   	DECLARE code varchar(100);
+   	DECLARE error_string varchar(100);
+   	DECLARE last_user_id int;
 
-	DELETE FROM messages WHERE from_user_id = delete_by_user_id
-;
+	DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
 
-	DELETE FROM messages WHERE to_user_id = delete_by_user_id
-;
+	begin
+    		SET `_rollback` = 1;
+		GET stacked DIAGNOSTICS CONDITION 1
+          		code = RETURNED_SQLSTATE, error_string = MESSAGE_TEXT;
+    		set tran_result := concat('Error occured. Code: ', code, '. Text: ', error_string);
+    	end;
 
-	DELETE FROM media WHERE user_id = delete_by_user_id
+   	 START TRANSACTION;
+		DELETE FROM likes WHERE user_id = delete_by_user_id;
+	
+	    IF `_rollback` THEN
+	       ROLLBACK;
+	    ELSE
+		set tran_result := 'ok';
+	       COMMIT;
+	    END IF;
 ;
-
-	DELETE FROM users WHERE id = delete_by_user_id
-;
-END
-//
+END//
 
 DELIMITER ;
 
-CALL delete_user(1);
+CALL delete_user(1, @tran_result);
+select @tran_result;
